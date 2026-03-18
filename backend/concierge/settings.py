@@ -19,6 +19,9 @@ ALLOWED_HOSTS = [
     for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
     if h.strip()
 ]
+# Railway gives a random domain — allow all hosts when not in debug
+if not DEBUG and "*" not in ALLOWED_HOSTS:
+    ALLOWED_HOSTS.append(".railway.app")
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
@@ -30,6 +33,8 @@ INSTALLED_APPS = [
 
 MIDDLEWARE = [
     "corsheaders.middleware.CorsMiddleware",
+    "django.middleware.security.SecurityMiddleware",
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.middleware.common.CommonMiddleware",
 ]
 
@@ -72,6 +77,9 @@ CORS_ALLOWED_ORIGINS = [
     if o.strip()
 ]
 CORS_ALLOW_CREDENTIALS = True
+# Also allow all origins if a wildcard is set (useful for deployment)
+if os.getenv("CORS_ALLOW_ALL", "").lower() in ("true", "1", "yes"):
+    CORS_ALLOW_ALL_ORIGINS = True
 
 # MongoDB
 MONGODB_URI = os.getenv("MONGODB_URI", "mongodb://localhost:27017")
@@ -81,4 +89,5 @@ LANGUAGE_CODE = "en-us"
 TIME_ZONE = "UTC"
 USE_TZ = True
 STATIC_URL = "static/"
+STATIC_ROOT = BASE_DIR / "staticfiles"
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
