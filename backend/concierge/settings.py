@@ -19,9 +19,11 @@ ALLOWED_HOSTS = [
     for h in os.getenv("ALLOWED_HOSTS", "localhost,127.0.0.1").split(",")
     if h.strip()
 ]
-# Railway gives a random domain — allow all hosts when not in debug
-if not DEBUG and "*" not in ALLOWED_HOSTS:
-    ALLOWED_HOSTS.append(".railway.app")
+# Always allow Railway domains
+ALLOWED_HOSTS.append(".railway.app")
+# In production, also accept all hosts as a safe fallback
+if not DEBUG:
+    ALLOWED_HOSTS.append("*")
 
 INSTALLED_APPS = [
     "django.contrib.contenttypes",
