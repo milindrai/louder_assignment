@@ -324,6 +324,39 @@ body {
   background: var(--accent-gradient);
 }
 
+.proposal-card__image-container {
+  margin: -2rem -2rem 1.5rem -2rem;
+  height: 220px;
+  position: relative;
+  overflow: hidden;
+}
+
+.proposal-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.7s var(--transition-spring);
+}
+
+.proposal-card:hover .proposal-card__image {
+  transform: scale(1.05);
+}
+
+.proposal-card__image-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 120px;
+  background: linear-gradient(to top, var(--bg-card), transparent);
+  pointer-events: none;
+}
+
+.proposal-card__content {
+  position: relative;
+  z-index: 1;
+}
+
 .proposal-card__header {
   display: flex;
   align-items: flex-start;

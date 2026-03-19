@@ -7,6 +7,7 @@ Includes a local fallback heuristic generator if APIs are unavailable.
 import os
 import json
 import re
+import urllib.parse
 
 # ─── Prompt shared by both providers ────────────────────────────────────────
 
@@ -95,6 +96,40 @@ _PLACEHOLDER_KEYS = {
 def _is_valid_key(key: str) -> bool:
     """Check if an API key looks real (not a placeholder)."""
     return bool(key) and key not in _PLACEHOLDER_KEYS
+
+
+def _fetch_venue_image(venue_name: str, location: str, event_type: str) -> str:
+    """
+    Attempts to fetch a real, high-quality photo of the venue using the Pexels API.
+    If no API key is provided or no results are found, falls back to a deterministic 
+    high-quality placeholder image based on the venue name.
+    """
+    # Deterministic fallback image (always exactly the same for a given venue)
+    safe_seed = urllib.parse.quote(venue_name)
+    fallback_url = f"https://picsum.photos/seed/{safe_seed}/800/400"
+    
+    api_key = os.getenv("PEXELS_API_KEY", "").strip()
+    if not api_key:
+        return fallback_url
+        
+    try:
+        import requests
+        headers = {"Authorization": api_key}
+        # Build a highly targeted search query for architectural/hotel imagery
+        query = urllib.parse.quote(f"luxury {event_type} hotel architecture")
+        url = f"https://api.pexels.com/v1/search?query={query}&orientation=landscape&size=medium&per_page=1"
+        
+        response = requests.get(url, headers=headers, timeout=5)
+        data = response.json()
+        
+        if data.get("photos") and len(data["photos"]) > 0:
+            return data["photos"][0]["src"]["large"]
+            
+    except Exception as e:
+        print(f"[Image Fetch] Error fetching from Pexels: {e}")
+        pass
+        
+    return fallback_url
 
 
 def _generate_fallback_proposal(user_input: str) -> dict:
@@ -212,10 +247,21 @@ def generate_venue_proposal(user_input: str) -> dict:
     for name, fn in providers:
         try:
             result = fn(user_input)
+            result["image_url"] = _fetch_venue_image(
+                result.get("venue_name", ""),
+                result.get("location", ""),
+                result.get("event_type", "event")
+            )
             return result
         except Exception:
             # Silently continue to next provider
             pass
 
     # All external providers failed (or none configured)
-    return _generate_fallback_proposal(user_input)
+    fallback_result = _generate_fallback_proposal(user_input)
+    fallback_result["image_url"] = _fetch_venue_image(
+        fallback_result["venue_name"], 
+        fallback_result["location"], 
+        fallback_result["event_type"]
+    )
+    return fallback_result

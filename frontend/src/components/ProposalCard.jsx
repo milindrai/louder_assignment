@@ -10,11 +10,20 @@ export default function ProposalCard({ proposal }) {
     why_it_fits,
     amenities,
     event_type,
+    image_url,
   } = proposal;
+
+  const finalImage = image_url || `https://picsum.photos/seed/${encodeURIComponent(venue_name)}/800/400`;
 
   return (
     <div className="proposal-card" key={venue_name}>
-      <div className="proposal-card__header">
+      <div className="proposal-card__image-container">
+        <img src={finalImage} alt={venue_name} className="proposal-card__image" loading="lazy" />
+        <div className="proposal-card__image-overlay"></div>
+      </div>
+      
+      <div className="proposal-card__content">
+        <div className="proposal-card__header">
         <h2 className="proposal-card__venue">{venue_name}</h2>
         {event_type && (
           <span className="proposal-card__type">{event_type}</span>
@@ -62,6 +71,7 @@ export default function ProposalCard({ proposal }) {
           ))}
         </div>
       )}
+      </div>
     </div>
   );
 }
