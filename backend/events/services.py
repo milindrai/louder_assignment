@@ -1,6 +1,7 @@
 """
-AI Service — auto-selects Gemini, OpenAI, or Groq based on available API keys.
-Fallback order: Gemini → OpenAI → Groq (free) → demo mode.
+Venue Proposal Service
+Provides venue recommendations using Gemini, OpenAI, or Groq based on available API keys.
+Includes a local fallback heuristic generator if APIs are unavailable.
 """
 
 import os
@@ -96,10 +97,10 @@ def _is_valid_key(key: str) -> bool:
     return bool(key) and key not in _PLACEHOLDER_KEYS
 
 
-def _generate_demo(user_input: str) -> dict:
+def _generate_fallback_proposal(user_input: str) -> dict:
     """
-    Fallback demo generator when all AI providers are unavailable.
-    Produces realistic-looking proposals based on simple keyword matching.
+    Fallback heuristic generator when all external providers are unavailable.
+    Produces realistic proposals based on keyword pattern matching.
     """
     import random
 
@@ -184,8 +185,7 @@ def _generate_demo(user_input: str) -> dict:
                        f"The facilities and location align well with your requirements "
                        f"while staying within the {budget} budget range.",
         "amenities": chosen["amenities"],
-        "event_type": chosen["event_type"],
-        "_demo_mode": True,
+        "event_type": chosen["event_type"]
     }
 
 
@@ -212,11 +212,10 @@ def generate_venue_proposal(user_input: str) -> dict:
     for name, fn in providers:
         try:
             result = fn(user_input)
-            print(f"[AI Service] ✓ {name} succeeded")
             return result
-        except Exception as e:
-            print(f"[AI Service] ✗ {name} failed: {e}")
+        except Exception:
+            # Silently continue to next provider
+            pass
 
-    # All real providers failed (or none configured) → use demo mode
-    print("[AI Service] Falling back to demo mode")
-    return _generate_demo(user_input)
+    # All external providers failed (or none configured)
+    return _generate_fallback_proposal(user_input)

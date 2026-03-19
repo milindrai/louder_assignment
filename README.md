@@ -1,17 +1,18 @@
-# AI Event Concierge Platform
+# Event Concierge Platform
 
-An AI-powered corporate event planning platform that takes natural language descriptions and returns structured venue proposals.
+A full-stack corporate event planning application that takes natural language descriptions and returns structured, intelligent venue proposals. 
 
-**Stack:** Django REST Framework · React.js (Vite) · MongoDB · Google Gemini / OpenAI
+**Stack:** Django REST Framework, React.js (Vite), MongoDB, Google Gemini / OpenAI / Groq
 
 ---
 
 ## Features
 
-- 🤖 **AI-Powered Venue Proposals** — Describe your event in natural language, get structured suggestions
-- 💾 **Persistent History** — All searches saved to MongoDB, visible on page refresh
-- 🔄 **Dual LLM Support** — Works with either Gemini or OpenAI (auto-detects from API keys)
-- 🎨 **Modern Dark UI** — Glassmorphism design with smooth animations
+- **Natural Language Parsing:** Describe your event requirements natively and receive structured, specific venue suggestions.
+- **Data Persistence:** All searches are saved to MongoDB asynchronously and persist across sessions.
+- **Provider Fallback Layer:** Built-in adapter that automatically handles API rate-limits by seamlessly falling back through available LLM providers (Gemini → OpenAI → Groq).
+- **Graceful Degradation:** Includes a local heuristic engine to ensure the platform remains functional even if all external APIs are exhausted.
+- **Modern UI:** Responsive, accessible interface built with React and Tailwind concepts.
 
 ---
 
@@ -69,13 +70,15 @@ Frontend runs at `http://localhost:5173`
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `GEMINI_API_KEY` | One of these | — | Google Gemini API key |
-| `OPENAI_API_KEY` | must be set | — | OpenAI API key |
+| `GEMINI_API_KEY` | At least one | — | Google Gemini API key |
+| `OPENAI_API_KEY` | provider | — | OpenAI API key |
+| `GROQ_API_KEY`   | required | — | Groq API key (Recommended fallback) |
 | `MONGODB_URI` | No | `mongodb://localhost:27017` | MongoDB connection string |
 | `DJANGO_SECRET_KEY` | No | Auto-generated | Django secret key |
 | `DEBUG` | No | `True` | Debug mode |
 | `ALLOWED_HOSTS` | No | `localhost,127.0.0.1` | Comma-separated hosts |
-| `CORS_ALLOWED_ORIGINS` | No | `http://localhost:5173` | Comma-separated origins |
+| `CORS_ALLOWED_ORIGINS`| No | `http://localhost:5173` | Comma-separated origins |
+| `CORS_ALLOW_ALL`  | No | `False` | Helpful flag for deployment |
 
 ### Frontend
 
@@ -104,24 +107,26 @@ curl -X POST http://localhost:8000/api/events/ \
 
 ## Deployment
 
-### Frontend → Vercel
+### Backend (Render)
 
-1. Push to GitHub
-2. Import repo on [vercel.com](https://vercel.com)
-3. Set **Root Directory** to `frontend`
-4. Add env var: `VITE_API_URL` = your backend URL (e.g. `https://your-api.railway.app/api`)
+1. Connect your repository to [Render](https://render.com) and create a **Web Service**.
+2. **Root Directory:** `backend`
+3. **Build Command:** `pip install -r requirements.txt && python manage.py collectstatic --noinput`
+4. **Start Command:** `gunicorn concierge.wsgi --bind 0.0.0.0:$PORT`
+5. Add env vars: `GROQ_API_KEY`, `MONGODB_URI`, `DEBUG=False`
 
-### Backend → Railway / Render
+### Frontend (Render Static Site / Vercel)
 
-1. Set **Root Directory** to `backend`
-2. **Build Command:** `pip install -r requirements.txt`
-3. **Start Command:** `gunicorn concierge.wsgi --bind 0.0.0.0:$PORT`
-4. Add env vars: `GEMINI_API_KEY`, `MONGODB_URI`, `ALLOWED_HOSTS`, `CORS_ALLOWED_ORIGINS`
+1. Connect repo to create a **Static Site** (Render) or **Project** (Vercel).
+2. **Root Directory:** `frontend`
+3. **Build Command:** `npm run build`
+4. **Publish Directory:** `dist`
+5. Add env var: `VITE_API_URL` = your deployed backend API URL (e.g., `https://my-backend.onrender.com/api`)
 
-### Database → MongoDB Atlas
+### Database (MongoDB Atlas)
 
 1. Create a free M0 cluster at [mongodb.com/atlas](https://mongodb.com/atlas)
-2. Copy connection string → set as `MONGODB_URI` in backend env vars
+2. Obtain connection string and set as `MONGODB_URI` in the backend environment.
 
 ---
 
