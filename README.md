@@ -20,6 +20,8 @@ A full-stack corporate event planning application that takes natural language de
 
 **🌐 [View Live App](https://louder-assignment-1.onrender.com/)**
 
+![Event Concierge Demo](./demo.png)
+
 > **Note on Performance (The "Cold Start"):** 
 > The backend is hosted on a free Render instance. To save resources, Render automatically spins down the server after 15 minutes of inactivity. **If you are the first person to visit the site in a while, the very first search will take ~50 seconds as the backend boots up.** All subsequent requests will be instantaneous.
 
